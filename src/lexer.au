@@ -1,18 +1,21 @@
 // ** Lexer **
 class lexer {
     var pos;
+    var len;
     var code_points;
 }
 
 export def new(source) {
+    code_points = str::code_points(source);
     return new lexer {
         pos: 0,
-        code_points: str::code_points(source),
+        len: list::len(code_points),
+        code_points: code_points,
     };
 }
 
 export def (self: lexer) has_more_chars() {
-    return @pos + 1 >= list::len(@code_points);
+    return @pos + 1 <= @len;
 }
 
 // ** Tokens **
@@ -21,42 +24,70 @@ class token {
     var data;
 }
 
+export def (self: token) t_type() {
+    return @type;
+}
+
+export def (self: token) t_data() {
+    return @data;
+}
+
 // * Token types *
-const TOKEN_OP      = 0;
-const TOKEN_STRING  = 1;
-const TOKEN_NUMBER  = 2;
-const TOKEN_IDENT   = 3;
-const TOKEN_WS      = 4;
+export const TOKEN_OP      = 0;
+export const TOKEN_STRING  = 1;
+export const TOKEN_NUMBER  = 2;
 
 def is_character(c) {
     c_int = str::ord(c);
-    return 0x20 <= c_int && c_int <= 0x10FFFF;
+    return 0x20 <= c_int && c_int <= 0x10FFFF && c != '"';
 }
 
 export def (self: lexer) next() {
-    if self.has_more_chars() {
-        // TODO: error
+    while self.has_more_chars() && str::is_space(@code_points[@pos]) {
+        @pos += 1;
+    }
+
+    if !self.has_more_chars() {
         return nil;
     }
+    
     current = @code_points[@pos];
-    if str::is_space(current) {
-        while !self.has_more_chars() && str::is_space(@code_points[@pos]) {
-            @pos += 1;
-        }
-        return new token {
-            type: TOKEN_WS,
-        };
-    } else if str::is_digit(current) || current == '-' {
-        built_string = "";
-        if current == '-' {
-            built_string += current;
-            @pos += 1;
-        }
-        while !self.has_more_chars() && str::is_digit(@code_points[@pos]) {
+    if str::is_digit(current) || current == '-' {
+        built_string = current;
+        @pos += 1;
+        while self.has_more_chars() && str::is_digit(@code_points[@pos]) {
             built_string += @code_points[@pos];
             @pos += 1;
         }
-        // TODO: fractional + exponent
+        if self.has_more_chars() && @code_points[@pos] == '.' {
+            built_string += '.';
+            @pos += 1;
+            while self.has_more_chars() && str::is_digit(@code_points[@pos]) {
+                built_string += @code_points[@pos];
+                @pos += 1;
+            }
+        }
+        if self.has_more_chars() &&
+           (@code_points[@pos] == 'e' || @code_points[@pos] == 'E') {
+            built_string += 'e';
+            @pos += 1;
+
+            if !self.has_more_chars() {
+                // TODO: error
+                return nil;
+            }
+
+            next_ch = @code_points[@pos];
+            if next_ch == '+' || next_ch == '-' || str::is_digit(@code_points[@pos]) {
+                built_string += next_ch;
+                @pos += 1;
+            }
+            
+            while self.has_more_chars() && str::is_digit(@code_points[@pos]) {
+                built_string += @code_points[@pos];
+                @pos += 1;
+            }
+        }
         return new token {
             type: TOKEN_NUMBER,
             data: float::into(built_string),
@@ -65,10 +96,11 @@ export def (self: lexer) next() {
         @pos += 1;
         built_string = "";
         // TODO: escape sequence
-        while !self.has_more_chars() && @code_points[@pos] != '"' {
+        while self.has_more_chars() && @code_points[@pos] != '"' {
             built_string += @code_points[@pos];
             @pos += 1;
         }
+        @pos += 1; // skip quote character
         return new token {
             type: TOKEN_STRING,
             data: built_string,
@@ -81,16 +113,6 @@ export def (self: lexer) next() {
         return new token {
             type: TOKEN_OP,
             data: current,
-        };
-    } else if is_character(current) {
-        built_string = "";
-        while !self.has_more_chars() && is_character(@code_points[@pos]) {
-            built_string += @code_points[@pos];
-            @pos += 1;
-        }
-        return new token {
-            type: TOKEN_IDENT,
-            data: built_string,
         };
     } else {
         // TODO: error handling

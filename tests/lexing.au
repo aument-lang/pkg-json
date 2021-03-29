@@ -1,0 +1,28 @@
+import "../src/lexer.au" as lexer;
+
+my_lexer = lexer::new("{} \"abc\" 1 -2");
+
+token = my_lexer.lexer::next();
+print token.lexer::t_type();
+print token.lexer::t_data();
+print '\n';
+
+token = my_lexer.lexer::next();
+print token.lexer::t_type();
+print token.lexer::t_data();
+print '\n';
+
+token = my_lexer.lexer::next();
+print token.lexer::t_type();
+print token.lexer::t_data();
+print '\n';
+
+token = my_lexer.lexer::next();
+print token.lexer::t_type();
+print token.lexer::t_data();
+print '\n';
+
+token = my_lexer.lexer::next();
+print token.lexer::t_type();
+print token.lexer::t_data();
+print '\n';
