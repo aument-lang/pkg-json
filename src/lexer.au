@@ -1,0 +1,46 @@
+// ** Lexer **
+class lexer {
+    var pos;
+    var code_points;
+}
+
+export def new(source) {
+    return new lexer {
+        pos: 0,
+        code_points: str::code_points(source),
+    };
+}
+
+// ** Tokens **
+class token {
+    var type;
+    var data;
+}
+
+// * Token types *
+const TOKEN_OP      = 0;
+const TOKEN_STRING  = 1;
+const TOKEN_NUMBER  = 2;
+const TOKEN_IDENT   = 3;
+
+export def (self: lexer) next() {
+    current = @code_points[@pos];
+    if str::is_space(current) {
+        // TODO: whitespace
+    } else if str::is_digit(current) {
+        // TODO: number
+    } else if current == '"' {
+        // TODO: string
+    } else if
+        current == '[' || current == ']' ||
+        current == '{' || current == '}' ||
+        current == ':' || current == ',' {
+        @pos += 1;
+        return new token {
+            type: TOKEN_OP,
+            source: current
+        };
+    } else {
+        // TODO: identifier
+    }
+}

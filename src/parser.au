@@ -1,0 +1,4 @@
+import "./lexer.au" as lexer;
+
+my_lexer = lexer::new("abc");
+print my_lexer.lexer::next();
