@@ -1,0 +1,3 @@
+import "../src/parser.au" as json;
+
+json::parse("{}");
