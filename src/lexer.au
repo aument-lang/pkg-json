@@ -11,6 +11,10 @@ export def new(source) {
     };
 }
 
+export def (self: lexer) has_more_chars() {
+    return @pos + 1 >= list::len(@code_points);
+}
+
 // ** Tokens **
 class token {
     var type;
@@ -22,15 +26,53 @@ const TOKEN_OP      = 0;
 const TOKEN_STRING  = 1;
 const TOKEN_NUMBER  = 2;
 const TOKEN_IDENT   = 3;
+const TOKEN_WS      = 4;
+
+def is_character(c) {
+    c_int = str::ord(c);
+    return 0x20 <= c_int && c_int <= 0x10FFFF;
+}
 
 export def (self: lexer) next() {
+    if self.has_more_chars() {
+        // TODO: error
+        return nil;
+    }
     current = @code_points[@pos];
     if str::is_space(current) {
-        // TODO: whitespace
-    } else if str::is_digit(current) {
-        // TODO: number
+        while !self.has_more_chars() && str::is_space(@code_points[@pos]) {
+            @pos += 1;
+        }
+        return new token {
+            type: TOKEN_WS,
+        };
+    } else if str::is_digit(current) || current == '-' {
+        built_string = "";
+        if current == '-' {
+            built_string += current;
+            @pos += 1;
+        }
+        while !self.has_more_chars() && str::is_digit(@code_points[@pos]) {
+            built_string += @code_points[@pos];
+            @pos += 1;
+        }
+        // TODO: fractional + exponent
+        return new token {
+            type: TOKEN_NUMBER,
+            data: float::into(built_string),
+        };
     } else if current == '"' {
-        // TODO: string
+        @pos += 1;
+        built_string = "";
+        // TODO: escape sequence
+        while !self.has_more_chars() && @code_points[@pos] != '"' {
+            built_string += @code_points[@pos];
+            @pos += 1;
+        }
+        return new token {
+            type: TOKEN_STRING,
+            data: built_string,
+        };
     } else if
         current == '[' || current == ']' ||
         current == '{' || current == '}' ||
@@ -38,9 +80,20 @@ export def (self: lexer) next() {
         @pos += 1;
         return new token {
             type: TOKEN_OP,
-            source: current
+            data: current,
+        };
+    } else if is_character(current) {
+        built_string = "";
+        while !self.has_more_chars() && is_character(@code_points[@pos]) {
+            built_string += @code_points[@pos];
+            @pos += 1;
+        }
+        return new token {
+            type: TOKEN_IDENT,
+            data: built_string,
         };
     } else {
-        // TODO: identifier
+        // TODO: error handling
+        return nil;
     }
 }
