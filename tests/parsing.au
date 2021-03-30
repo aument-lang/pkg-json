@@ -1,3 +1,19 @@
 import "../src/parser.au" as json;
 
-json::parse("{}");
+obj = json::parse("{}");
+
+obj = json::parse('{"a":1}');
+print obj["a"];
+print '\n';
+
+obj = json::parse('{"a":1,"b":2,"c":3}');
+print obj["a"];
+print obj["b"];
+print obj["c"];
+print '\n';
+
+obj = json::parse('{"a":[1,2,3]}');
+print obj["a"][0];
+print obj["a"][1];
+print obj["a"][2];
+print '\n';
