@@ -31,10 +31,10 @@ def (self: parser) expect_op(string) {
 def (self: parser) do_parse_value() {
     token = self.next();
     type = token.lexer::t_type();
-    if
+    if (
         type == lexer::TOKEN_STRING ||
         type == lexer::TOKEN_NUMBER
-    {
+    ) {
         return token.lexer::t_data();
     } else if type == lexer::TOKEN_OP {
         source = token.lexer::t_data();

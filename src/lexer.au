@@ -78,11 +78,11 @@ export def (self: lexer) next() {
             }
 
             next_ch = @code_points[@pos];
-            if next_ch == '+' || next_ch == '-' || str::is_digit(@code_points[@pos]) {
+            if next_ch == '+' || next_ch == '-' || str::is_digit(next_ch) {
                 built_string += next_ch;
                 @pos += 1;
             }
-            
+
             while self.has_more_chars() && str::is_digit(@code_points[@pos]) {
                 built_string += @code_points[@pos];
                 @pos += 1;
