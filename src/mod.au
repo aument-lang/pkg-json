@@ -1,0 +1,10 @@
+import "./parser.au" as parser;
+import "./serializer.au" as serializer;
+
+export def parse(string) {
+    return parser::parse(string);
+}
+
+export def stringify(object) {
+    return serializer::stringify(object);
+}
