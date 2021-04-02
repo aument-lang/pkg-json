@@ -73,8 +73,7 @@ export def (self: lexer) next() {
             @pos += 1;
 
             if !self.has_more_chars() {
-                // TODO: error
-                return nil;
+                raise "unexpected end of file";
             }
 
             next_ch = @code_points[@pos];
@@ -115,7 +114,6 @@ export def (self: lexer) next() {
             data: current,
         };
     } else {
-        // TODO: error handling
-        return nil;
+        raise "unexpected character";
     }
 }

@@ -11,20 +11,16 @@ def new(string) {
 }
 
 def (self: parser) next() {
-    return @lexer.lexer::next();
+    return @lexer.lexer::next()!;
 }
 
 def (self: parser) expect_op(string) {
-    token = self.next();
+    token = self.next()!;
     if token.lexer::t_type() != lexer::TOKEN_OP {
-        // TODO: error
-        print "expected operator\n";
-        sys::abort();
+        raise "expected operator";
     }
     if token.lexer::t_data() != string {
-        // TODO: error
-        print "expected ", string, "\n";
-        sys::abort();
+        raise "expected " + string;
     }
 }
 
@@ -38,85 +34,79 @@ def (self: parser) do_parse_value_with_token(token) {
     } else if type == lexer::TOKEN_OP {
         source = token.lexer::t_data();
         if source == '[' {
-            return self.do_parse_array();
+            return self.do_parse_array()!;
         } else if source == '{' {
-            return self.do_parse_object();
+            return self.do_parse_object()!;
         }
     }
-    sys::abort();
+    raise "unexpected token";
 }
 
 def (self: parser) do_parse_value() {
-    return self.do_parse_value_with_token(self.next());
+    return self.do_parse_value_with_token(self.next()!)!;
 }
 
 def (self: parser) do_parse_object() {
-    token = self.next();
+    token = self.next()!;
     object = {};
     if token.lexer::t_type() == lexer::TOKEN_STRING {
         key = token.lexer::t_data();
-        self.expect_op(":");
-        value = self.do_parse_value();
+        self.expect_op(":")!;
+        value = self.do_parse_value()!;
         object[key] = value;
-        while (token = self.next()) != nil {
+        while (token = self.next()!) != nil {
             if token.lexer::t_type() == lexer::TOKEN_OP {
                 op = token.lexer::t_data();
                 if op == '}' {
                     return object;
                 } else if op == ',' {
-                    token = self.next();
+                    token = self.next()!;
                     if token.lexer::t_type() != lexer::TOKEN_STRING {
-                        // TODO: error
-                        sys::abort();
+                        raise "expected string";
                     }
                     key = token.lexer::t_data();
-                    self.expect_op(":");
-                    value = self.do_parse_value();
+                    self.expect_op(":")!;
+                    value = self.do_parse_value()!;
                     object[key] = value;
                 } else {
-                    // TODO: error
-                    sys::abort();
+                    raise "expected '}' or ','";
                 }
             } else {
-                // TODO: error
-                sys::abort();
+                raise "unexpected token";
             }
         }
     } else if (
         token.lexer::t_type() != lexer::TOKEN_OP ||
         token.lexer::t_data() != '}'
     ) {
-        // TODO: error
-        sys::abort();
+        raise "expected '}'";
     }
     return object;
 }
 
 def (self: parser) do_parse_array() {
     array = [];
-    token = self.next();
+    token = self.next()!;
     if (
         token.lexer::t_type() == lexer::TOKEN_OP &&
         token.lexer::t_data() == ']'
     ) {
         return array;
     } else {
-        array.array::push(self.do_parse_value_with_token(token));
+        array.array::push(self.do_parse_value_with_token(token)!);
     }
-    while (token = self.next()) != nil {
+    while (token = self.next()!) != nil {
         if token.lexer::t_type() == lexer::TOKEN_OP {
             op = token.lexer::t_data();
             if op == ']' {
                 return array;
             } else if op == ',' {
-                array.array::push(self.do_parse_value());
+                array.array::push(self.do_parse_value()!);
             } else {
-                // TODO: error
-                sys::abort();
+                raise "expected ',' or ']'";
             }
         } else {
-            // TODO: error
-            sys::abort();
+            raise "unexpected token";
         }
     }
 }
@@ -124,6 +114,6 @@ def (self: parser) do_parse_array() {
 // ** Public methods **
 export def parse(source) {
     parser = new(source);
-    parser.expect_op("{");
-    return parser.do_parse_object();
+    parser.expect_op("{")!;
+    return parser.do_parse_object()!;
 }
